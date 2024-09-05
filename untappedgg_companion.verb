@@ -1,0 +1,16 @@
+W_LOCALAPPDATA_WIN="$(w_expand_env LocalAppData)"
+
+w_metadata untappedgg_companion apps \
+    title="Untapped.gg Companion Stable Release" \
+    publisher="HearthSim, LLC" \
+    year="2024" \
+    media="download" \
+    file1="Untapped.gg+Companion+Stable+Installer.exe" \
+    installed_exe1="${W_LOCALAPPDATA_WIN}\Programs\untapped-companion\Untapped.gg Companion.exe"
+
+load_untappedgg_companion()
+{
+    w_download https://companion.untapped.gg/releases/Untapped.gg+Companion+Stable+Installer.exe 28920411f41997c45ee12557eb1e2d2c28ed589fdf83c1fc955953089804295a
+    w_try_cd "${W_CACHE}"/"${W_PACKAGE}"
+    w_try "${WINE}" Untapped.gg+Companion+Stable+Installer.exe /currentuser /S
+}
