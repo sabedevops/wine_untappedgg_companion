@@ -7,7 +7,7 @@ In this context, Steam runs the MTGA client via [Proton](https://github.com/Valv
 
 These instructions assume you've already got Steam installed via flatpak and the MTGA client running via proton but the general process should be easy to extrapolate in the case you're running Steam directly on your Linux distribution (hint: you do everything the same without flatpak equivalents of commands).
 
-NOTE: At this time, the overlay UI causes significant weirdness. It will run - but not well. For now, we use this as an agent only, to populate the Untapped.gg site metrics and support the Twitch extension.
+NOTE: At this time, the overlay UI causes significant weirdness. It will run - but not well. For now, disable the overlay and instead enable the decks to pop out to individual windows. That works on my system but YMMV based on your matrix of software versions, drivers, and hardware.
 
 Instructions:
 =============
