@@ -5,7 +5,7 @@ This repo hosts a simple [winetricks verb](https://github.com/Winetricks/winetri
 
 In this context, Steam runs the MTGA client via [Proton](https://github.com/ValveSoftware/Proton), which is analogous to Flatpak for running sandboxed Wine prefix installations inside of Linux namespaces. We use the [protontricks flatpak](https://flathub.org/apps/com.github.Matoking.protontricks) to install this custom verb inside of the MTGA prefix.
 
-These instructions assume you've already got Steam installed via flatpak and the MTGA client running via proton but the general process should be easy to extrapolate in the case you're running Steam directly on your Linux distribution (hint: you do everything the same without flatpak equivalents of commands).
+These instructions assume you've already got Steam installed via Flatpak and the MTGA client running via proton but the general process should be easy to extrapolate in the case you're running Steam directly on your Linux distribution (hint: you do everything the same without flatpak equivalents of commands).
 
 NOTE: At this time, the overlay UI causes significant weirdness. It will run - but not well. For now, disable the overlay and instead enable the decks to pop out to individual windows. That works on my system but YMMV based on your matrix of software versions, drivers, and hardware.
 
@@ -22,17 +22,14 @@ flatpak install --user flathub com.github.Matoking.protontricks
 flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l
 ```
 
-2. Gather the MTGA app's `AppID`, in the case of MTGA it should be `2141910` but check this way:
-```bash
-flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l | grep 'Magic: The Gathering Arena' | sed -n 's/.*(\([0-9]*\)).*/\1/p'
-```
-
-3. Clone this repo and install verb
+2. Clone this repo and install verb
 ```bash
 flatpak run --env=PROTON_VERSION="Proton Experimental" --file-forwarding com.github.Matoking.protontricks -v 2141910 @@ untappedgg_companion.verb @@
 ```
 
-4. Modify the MTGA client's Launch Options on Steam as described [here](https://help.steampowered.com/en/faqs/view/0188-6BB7-D467-08E1) and set to the following string replacing `[username]` and `[AppId]` with your own: `PROTON_REMOTE_DEBUG_CMD="/home/[username]/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/[AppID]/pfx/drive_c/users/steamuser/AppData/Local/Programs/untapped-companion/Untapped.gg\ Companion.exe" %command%`
+3. Modify the MTGA client's Launch Options on Steam as described [here](https://help.steampowered.com/en/faqs/view/0188-6BB7-D467-08E1) and set to the following string replacing `[username]` with your own:
+
+`PROTON_REMOTE_DEBUG_CMD="/home/[username]/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/2141910/pfx/drive_c/users/steamuser/AppData/Local/Programs/untapped-companion/Untapped.gg\ Companion.exe" %command%`
 
 That's it! When you next launch MTGA, the Untapped.gg Companion app should be launched also. When you first launch it, you'll login and disable the overlay (for now). Your game data will now be shipped to the Untapped.gg site and should be accessible for streaming through the Twitch extension.
 
@@ -45,7 +42,7 @@ Other Information:
 
 `C:\users\steamuser\AppData\Roaming\untapped-companion\log.log` is the application's log file.
 
-The root directory of all of these can be accessed via the host through `~.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/2141910/pfx/drive_c/users/steamuser/AppData/`
+The root directory of all of these can be accessed via the host through `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/2141910/pfx/drive_c/users/steamuser/AppData/`
 
 After logging in, the client installs a number of registry keys. Some interesting ones are:
 
@@ -58,4 +55,9 @@ if("win32"===process.platform)
     return k.a.join(d.app.getPath("home"),"AppData/LocalLow/Wizards Of The Coast/MTGA/Player.log");
 if("darwin"===process.platform)
     return k.a.join(d.app.getPath("home"),"/Library/Logs/Wizards Of The Coast/MTGA/Player.log");
+```
+
+The `AppID` will be `2141910` in the case of MTGA, but for other supported companion apps you can gather it like this:
+```bash
+flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l | grep 'Magic: The Gathering Arena' | sed -n 's/.*(\([0-9]*\)).*/\1/p'
 ```
