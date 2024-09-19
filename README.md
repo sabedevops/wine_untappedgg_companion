@@ -7,7 +7,7 @@ In this context, Steam runs the MTGA client via [Proton](https://github.com/Valv
 
 These instructions assume you've already got Steam installed via Flatpak and the MTGA client running via proton but the general process should be easy to extrapolate in the case you're running Steam directly on your Linux distribution (hint: you do everything the same without flatpak equivalents of commands).
 
-NOTE: At this time, the overlay UI causes significant weirdness. It will run - but not well. For now, disable the overlay and instead enable the decks to pop out to individual windows. That works on my system but YMMV based on your matrix of software versions, drivers, and hardware.
+NOTE: At this time, the overlay UI causes significant weirdness. We disable the overlay, and instead use pop-out windows were possible to workaround the issue.
 
 Instructions:
 =============
@@ -36,6 +36,8 @@ That's it! When you next launch MTGA, the Untapped.gg Companion app should be la
 Other Information:
 ==================
 
+`C:\users\steamuser\AppData\Roaming\untapped-companion\config.log` is the configuration file. We seed this file with Linux specific options that allow this client to run on the platform. This file is read by the application at startup and managed by the client when you make changes to your settings so we only seed it and ignore after that.
+
 `C:\users\steamuser\AppData\Local\Programs\untapped-companion` contains the `Untapped.gg Companion.exe` binary.
 
 `C:\users\steamuser\AppData\Local\untapped-companion-updater\package.7z` is automatically extracted by the client during installation.
@@ -57,7 +59,16 @@ if("darwin"===process.platform)
     return k.a.join(d.app.getPath("home"),"/Library/Logs/Wizards Of The Coast/MTGA/Player.log");
 ```
 
-The `AppID` will be `2141910` in the case of MTGA, but for other supported companion apps you can gather it like this:
+The `AppID` will be `2141910` in the case of MTGA, but for other supported companion apps (e.g. Marvel Snap, Yu-Gi-Oh! Master Duel, etc...)  you can gather it like this:
 ```bash
 flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l | grep 'Magic: The Gathering Arena' | sed -n 's/.*(\([0-9]*\)).*/\1/p'
 ```
+
+Finally, note that there may be yet misunderstood aspects of why the normal overlay doesn't work. Pop-out windows do work, and the behavior demonstrated by the client shows that it is having issues with some form of maintaining window focus, staying on top of the applications, or passing through mouse events correctly. There may be a combination of window registry settings, driver settings, or software stack tweaking to resolve this issue. For posterity, perhaps the following winetricks should be investigated:
+
+* usetakefocus
+* windowmanagerdecorated
+* windowmanagermanaged
+* vd
+* videomemorysize
+* etc..
