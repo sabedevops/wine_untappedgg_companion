@@ -45,7 +45,7 @@ w_metadata untappedgg_companion apps \
     publisher='HearthSim, LLC' \
     year='2024' \
     media='download' \
-    file1='Untapped.gg+Companion+Stable+Installer.exe'
+    file1='Untapped.gg+Companion+Stable+Installer.exe' \
     installed_exe1="${W_LOCALAPPDATA_WIN}\\Programs\\untapped-companion\\Untapped.gg Companion.exe"
 
 load_untappedgg_companion() {
