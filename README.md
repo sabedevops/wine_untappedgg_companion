@@ -27,11 +27,19 @@ flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.proto
 flatpak run --env=PROTON_VERSION="Proton Experimental" --file-forwarding com.github.Matoking.protontricks -v 2141910 @@ untappedgg_companion.verb @@
 ```
 
-3. Modify the MTGA client's Launch Options on Steam as described [here](https://help.steampowered.com/en/faqs/view/0188-6BB7-D467-08E1) and set to the following string replacing `[username]` with your own:
+3. IMPORTANT: Exit the Untapped Companion client. You will *NOT* be able to login until you run it within Steam.
 
+4. Modify the MTGA client's Launch Options on Steam as described [here](https://help.steampowered.com/en/faqs/view/0188-6BB7-D467-08E1) and set to the following string replacing `[username]` with your own:
+
+```
 `PROTON_REMOTE_DEBUG_CMD="/home/[username]/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/2141910/pfx/drive_c/users/steamuser/AppData/Local/Programs/untapped-companion/Untapped.gg\ Companion.exe" %command%`
+```
 
-That's it! When you next launch MTGA, the Untapped.gg Companion app should be launched also. When you first launch it, you'll login and disable the overlay (for now). Your game data will now be shipped to the Untapped.gg site and should be accessible for streaming through the Twitch extension.
+5. Set the Compatibility mode to `Proton Experimental`.
+
+6. Launch the game, and login to the Untapped.gg Companion.
+
+Enjoy! Your game data will now be shipped to the Untapped.gg site and should be accessible for streaming through the Twitch extension.
 
 Other Information:
 ==================
