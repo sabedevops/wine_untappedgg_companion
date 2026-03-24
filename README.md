@@ -39,6 +39,8 @@ flatpak run --env=PROTON_VERSION="Proton Experimental" --file-forwarding com.git
 
 6. Launch the game, and login to the Untapped.gg Companion.
 
+NOTE: After performing login for the first time, you may need to restart MTGA for the Untapped.gg Companion to work correctly.
+
 Enjoy! Your game data will now be shipped to the Untapped.gg site and should be accessible for streaming through the Twitch extension.
 
 Other Information:
