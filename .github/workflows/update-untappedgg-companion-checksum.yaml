@@ -1,0 +1,75 @@
+---
+name: update-untappedgg-companion-checksum
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-untappedgg-companion-checksum:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+
+    env:
+      BINARY_FILE: "Untapped.gg+Companion+Stable+Installer.exe"
+      BINARY_URL: "https://companion.untapped.gg/releases"
+      VERB_FILE: "untappedgg_companion.verb"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          sparse-checkout: |
+            ${{ env.VERB_FILE }}
+          sparse-checkout-cone-mode: false
+
+      - name: "Download ${{ env.BINARY_FILE }}"
+        run: |
+          curl --output "${{ env.BINARY_FILE }}" "${{ env.BINARY_URL }}/${{ env.BINARY_FILE }}"
+
+      - name: Calculate installer sha256sum
+        id: checksum
+        run: |
+          NEW_CHECKSUM=$(sha256sum "${{ env.BINARY_FILE }}" | awk '{print $1}')
+          OLD_CHECKSUM=$(grep "UNTAPPEDGG_COMPANION_CHECKSUM=" "${{ env.VERB_FILE }}" | cut -d '"' -f2)
+
+          if [ "$NEW_CHECKSUM" != "$OLD_CHECKSUM" ]; then
+            echo "new_checksum=$NEW_CHECKSUM" >> $GITHUB_OUTPUT
+            echo "old_checksum=$OLD_CHECKSUM" >> $GITHUB_OUTPUT
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo -e "Checksums differ:\nOLD: $OLD_CHECKSUM\nNEW: $NEW_CHECKSUM"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Checksums already match. Nothing to do."
+          fi
+
+      - name: Update checksum if changed
+        id: update
+        if: steps.checksum.outputs.changed == 'true'
+        run: |
+          sed -i 's/^UNTAPPEDGG_COMPANION_CHECKSUM=.*$/UNTAPPEDGG_COMPANION_CHECKSUM="${{ steps.checksum.outputs.new_checksum }}"/' "${{ env.VERB_FILE }}"
+          echo "updated=true" >> $GITHUB_OUTPUT
+          echo "File updated with checksum: ${{ steps.checksum.outputs.new_checksum }}"
+
+      - name: Create pull request
+        if: steps.update.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: 'chore: update Untapped.gg Companion checksum'
+          title: 'Update Untapped.gg Companion checksum'
+          body: |
+            The checksum for ${{ env.BINARY_FILE }} has changed.
+
+            Old checksum: `${{ steps.checksum.outputs.old_checksum }}`
+            New checksum: `${{ steps.checksum.outputs.new_checksum }}`
+
+            This PR was automatically created by the update-untappedgg-companion-checksum workflow.
+          branch: update-untappedgg-companion-checksum
+          base: master
+          delete-branch: true
+          reviewers: sabedevops
