@@ -46,39 +46,11 @@ Enjoy! Your game data will now be shipped to the Untapped.gg site and should be 
 Other Information:
 ==================
 
-`C:\users\steamuser\AppData\Roaming\untapped-companion\config.log` is the configuration file. We seed this file with Linux specific options that allow this client to run on the platform. This file is read by the application at startup and managed by the client when you make changes to your settings so we only seed it and ignore after that.
-
-`C:\users\steamuser\AppData\Local\Programs\untapped-companion` contains the `Untapped.gg Companion.exe` binary.
-
-`C:\users\steamuser\AppData\Local\untapped-companion-updater\package.7z` is automatically extracted by the client during installation.
-
-`C:\users\steamuser\AppData\Roaming\untapped-companion\log.log` is the application's log file.
-
-The root directory of all of these can be accessed via the host through `~/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/2141910/pfx/drive_c/users/steamuser/AppData/`
-
-After logging in, the client installs a number of registry keys. Some interesting ones are:
-
-* `Software\\HearthSim\\Common`
-* `Software\\Wine\\Credential Manager\\Generic: Untapped Companion`
-
-Discovery of the MTGA `Player.log` is done through the following minified logic in the companion source:
-```
-if("win32"===process.platform)
-    return k.a.join(d.app.getPath("home"),"AppData/LocalLow/Wizards Of The Coast/MTGA/Player.log");
-if("darwin"===process.platform)
-    return k.a.join(d.app.getPath("home"),"/Library/Logs/Wizards Of The Coast/MTGA/Player.log");
-```
-
 The `AppID` will be `2141910` in the case of MTGA, but for other supported companion apps (e.g. Marvel Snap, Yu-Gi-Oh! Master Duel, etc...)  you can gather it like this:
+
 ```bash
 flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l | grep 'Magic: The Gathering Arena' | sed -n 's/.*(\([0-9]*\)).*/\1/p'
 ```
 
-Finally, note that there may be yet misunderstood aspects of why the normal overlay doesn't work. Pop-out windows do work, and the behavior demonstrated by the client shows that it is having issues with some form of maintaining window focus, staying on top of the applications, or passing through mouse events correctly. There may be a combination of window registry settings, driver settings, or software stack tweaking to resolve this issue. For posterity, perhaps the following winetricks should be investigated:
-
-* usetakefocus
-* windowmanagerdecorated
-* windowmanagermanaged
-* vd
-* videomemorysize
-* etc..
+* [Relevant Files and Directories](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Relevant-Files-and-Directories)
+* [Known Overlay Issues](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Known-Overlay-Issues)
