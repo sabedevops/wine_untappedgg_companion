@@ -1,56 +1,88 @@
 About:
 ======
 
-This repo hosts a simple [winetricks verb](https://github.com/Winetricks/winetricks?tab=readme-ov-file#custom-verb-files) that installs the [Untapped.gg Companion](https://mtga.untapped.gg/companion) app inside a wine prefix. It can be used for any game supported by the companion app operating through the Wine compatibility layer, but our purpose here was to enable it for [Magic: The Gathering Arena](https://magic.wizards.com/en/mtgarena) running through [Valve's flatpak-based runtime for Steam](https://flathub.org/apps/com.valvesoftware.Steam).
+This repo hosts a simple [winetricks verb](https://github.com/Winetricks/winetricks?tab=readme-ov-file#custom-verb-files) that installs the [Untapped.gg Companion](https://mtga.untapped.gg/companion) app inside a WINE prefix. It can be used for any game supported by the Untapped.gg Companion app operating through the WINE compatibility layer.
 
-In this context, Steam runs the MTGA client via [Proton](https://github.com/ValveSoftware/Proton), which is analogous to Flatpak for running sandboxed Wine prefix installations inside of Linux namespaces. We use the [protontricks flatpak](https://flathub.org/apps/com.github.Matoking.protontricks) to install this custom verb inside of the MTGA prefix.
+Our example uses [Magic: The Gathering Arena](https://magic.wizards.com/en/mtgarena). Other supported games should function similarly.
 
-These instructions assume you've already got Steam installed via Flatpak and the MTGA client running via proton but the general process should be easy to extrapolate in the case you're running Steam directly on your Linux distribution (hint: you do everything the same without flatpak equivalents of commands).
+Our example shows the following scenario:
+* [Steam](https://flathub.org/apps/com.valvesoftware.Steam) installed via flatpak.
+* [Proton](https://github.com/ValveSoftware/Proton) running a game installed via Steam store
+* [protontricks](https://flathub.org/apps/com.github.Matoking.protontricks) installed via flatpak
+
+For other installation scenarios and other issues, please see the wiki: [Installation Help](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Installation-Help)
+
+Install Instructions:
+=====================
+
+1. Install protontricks. I recommend using the flatpak.
+
+
+```bash
+# Install the protontricks flatpak
+flatpak install --user flathub com.github.Matoking.protontricks
+
+# Smoke test by listing steam apps.
+# '--env' flag required here only if running game under Proton Experimental 
+flatpak run --env=PROTON_VERSION='Proton Experimental' com.github.Matoking.protontricks -l
+```
+
+2. Gather the `AppID` of the game you're interested in:
+
+```bash
+# Replace with different game name if necessary
+GAME_NAME='Magic: The Gathering Arena'
+
+# Gather AppID of the game
+STEAM_APPID="$(
+    flatpak run \
+      --env=PROTON_VERSION='Proton Experimental' \
+      com.github.Matoking.protontricks -s "$GAME_NAME" |
+      grep "$GAME_NAME" |
+      sed -n 's/.*(\([0-9]*\)).*/\1/p'
+)"
+echo "STEAM_APPID=$STEAM_APPID"
+```
+
+3. Clone this repo, `cd` into it, and install verb
+```bash
+git clone https://github.com/sabedevops/wine_untappedgg_companion.git
+cd wine_untappedgg_comanion
+
+flatpak run \
+  --env=PROTON_VERSION='Proton Experimental' \
+  --file-forwarding \
+  com.github.Matoking.protontricks -v "${STEAM_APPID}" @@ untappedgg_companion.verb @@
+```
+
+4. IMPORTANT: Exit the Untapped.gg Companion client. You will *NOT* be able to login until you run it within Steam.
+
+
+5. Gather `PROTON_REMOTE_DEBUG_CMD` using the `assemble_proton_cmd.sh` helper script:
+
+```bash
+./assemble_proton_cmd.sh "$STEAM_APPID"
+```
+
+6. Modify the game client's Launch Options on Steam as described [here](https://help.steampowered.com/en/faqs/view/0188-6BB7-D467-08E1). Paste the script output, it should look something like this for this example:
+
+`PROTON_REMOTE_DEBUG_CMD="/home/${USERNAME}/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/${STEAM_APPID}/pfx/drive_c/users/steamuser/AppData/Local/Programs/untapped-companion/Untapped.gg\ Companion.exe" %command%`
+
+7. Set the Compatibility mode to `Proton Experimental`.
+
+8. Launch the game, and login to the Untapped.gg Companion.
+
+NOTE: After performing login for the first time, you may need to restart the game for the Untapped.gg Companion to work correctly.
+
+Additional Information:
+=======================
 
 NOTE: At this time, the overlay UI causes significant weirdness. We disable the overlay, and instead use pop-out windows were possible to workaround the issue.
 
-Instructions:
-=============
+For more information, see here:
 
-1. Install protontricks and test.
-```bash
-# Install the flatpak
-flatpak install --user flathub com.github.Matoking.protontricks
+* [Known Overlay Issues](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Known-Overlay-Issues)
 
-# List steam apps. 
-# '--env' flag required here only if running game under Proton Experimental 
-flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l
-```
-
-2. Clone this repo and install verb
-```bash
-flatpak run --env=PROTON_VERSION="Proton Experimental" --file-forwarding com.github.Matoking.protontricks -v 2141910 @@ untappedgg_companion.verb @@
-```
-
-3. IMPORTANT: Exit the Untapped Companion client. You will *NOT* be able to login until you run it within Steam.
-
-4. Modify the MTGA client's Launch Options on Steam as described [here](https://help.steampowered.com/en/faqs/view/0188-6BB7-D467-08E1) and set to the following string replacing `[username]` with your own:
-
-```
-`PROTON_REMOTE_DEBUG_CMD="/home/[username]/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/compatdata/2141910/pfx/drive_c/users/steamuser/AppData/Local/Programs/untapped-companion/Untapped.gg\ Companion.exe" %command%`
-```
-
-5. Set the Compatibility mode to `Proton Experimental`.
-
-6. Launch the game, and login to the Untapped.gg Companion.
-
-NOTE: After performing login for the first time, you may need to restart MTGA for the Untapped.gg Companion to work correctly.
-
-Enjoy! Your game data will now be shipped to the Untapped.gg site and should be accessible for streaming through the Twitch extension.
-
-Other Information:
-==================
-
-The `AppID` will be `2141910` in the case of MTGA, but for other supported companion apps (e.g. Marvel Snap, Yu-Gi-Oh! Master Duel, etc...)  you can gather it like this:
-
-```bash
-flatpak run --env=PROTON_VERSION="Proton Experimental" com.github.Matoking.protontricks -l | grep 'Magic: The Gathering Arena' | sed -n 's/.*(\([0-9]*\)).*/\1/p'
-```
+If you're curious about what's happening internally, see here:
 
 * [Relevant Files and Directories](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Relevant-Files-and-Directories)
-* [Known Overlay Issues](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Known-Overlay-Issues)
