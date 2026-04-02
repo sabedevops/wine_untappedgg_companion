@@ -15,6 +15,8 @@ jobs:
       pull-requests: write
 
     env:
+      RELEASE_MANIFEST: "https://companion.untapped.gg/releases/latest.yml"
+      MANIFEST:  "manifest.sha512-base64"
       BINARY_FILE: "Untapped.gg+Companion+Stable+Installer.exe"
       BINARY_URL: "https://companion.untapped.gg/releases"
       VERB_FILE: "untappedgg_companion.verb"
@@ -26,17 +28,42 @@ jobs:
           fetch-depth: 1
           sparse-checkout: |
             ${{ env.VERB_FILE }}
+            ${{ env.MANIFEST }}
           sparse-checkout-cone-mode: false
 
-      - name: "Download ${{ env.BINARY_FILE }}"
+      - name: "Detect new release information from ${{ env.RELEASE_MANIFEST }}"
+        id: preflight
+        run: |
+          curl --silent --fail --output manifest.yaml ${{ env.RELEASE_MANIFEST }}
+          NEW_MANIFEST_SHA512="$(python -c 'import sys, yaml; print(yaml.safe_load(sys.stdin)["sha512"])' < manifest.yaml)"
+          OLD_MANIFEST_SHA512="$(< "${{ env.MANIFEST }}")"
+
+          if [ "$NEW_MANIFEST_SHA512" != "$OLD_MANIFEST_SHA512" ]; then
+            echo "new_sha512_base64=$NEW_MANIFEST_SHA512" >> $GITHUB_OUTPUT
+            echo "old_sha512_base64=$OLD_MANIFEST_SHA512" >> $GITHUB_OUTPUT
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo -e "SHA512 differs:\nOLD: $OLD_MANIFEST_SHA512\nNEW: $NEW_MANIFEST_SHA512"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "SHA512 already matches. Nothing to do."
+          fi
+
+      - name: "Download ${{ env.BINARY_FILE }} and validate SHA512"
+        if: steps.preflight.outputs.changed == 'true'
         run: |
           curl --output "${{ env.BINARY_FILE }}" "${{ env.BINARY_URL }}/${{ env.BINARY_FILE }}"
+          ACTUAL_SHA512_BASE64="$(sha512sum ${{ env.BINARY_FILE }} | awk '{print $1}' | xxd -r -p | base64)
+
+          if [ "$ACTUAL_SHA512_BASE64" != "${{ steps.preflight.outputs.new_sha512_base64 }}" ]; then
+            echo "Unknown error: SHA512 did not match. NEW: ${{ steps.preflight.outputs.new_sha512_base64 }}, ACTUAL: $ACTUAL_SHA512_BASE64"
+            exit 1
+          fi
 
       - name: Calculate installer sha256sum
         id: checksum
         run: |
-          NEW_CHECKSUM=$(sha256sum "${{ env.BINARY_FILE }}" | awk '{print $1}')
-          OLD_CHECKSUM=$(grep "UNTAPPEDGG_COMPANION_CHECKSUM=" "${{ env.VERB_FILE }}" | cut -d '"' -f2)
+          NEW_CHECKSUM="$(sha256sum "${{ env.BINARY_FILE }}" | awk '{print $1}')"
+          OLD_CHECKSUM="$(grep "UNTAPPEDGG_COMPANION_CHECKSUM=" "${{ env.VERB_FILE }}" | cut -d '"' -f2)"
 
           if [ "$NEW_CHECKSUM" != "$OLD_CHECKSUM" ]; then
             echo "new_checksum=$NEW_CHECKSUM" >> $GITHUB_OUTPUT
@@ -54,10 +81,13 @@ jobs:
         run: |
           sed -i 's/^UNTAPPEDGG_COMPANION_CHECKSUM=.*$/UNTAPPEDGG_COMPANION_CHECKSUM="${{ steps.checksum.outputs.new_checksum }}"/' "${{ env.VERB_FILE }}"
           echo "updated=true" >> $GITHUB_OUTPUT
-          echo "File updated with checksum: ${{ steps.checksum.outputs.new_checksum }}"
+          echo "${{ env.VERB_FILE }} updated with checksum: ${{ steps.checksum.outputs.new_checksum }}"
+          echo "${{ steps.preflight.outputs.new_sha512_base64 }}" > "${{ env.MANIFEST }}"
+          echo "${{ env.MANIFEST }} updated with checksum: ${{ steps.preflight.outputs.new_sha512_base64 }}"
 
       - name: Create pull request
         if: steps.update.outputs.updated == 'true'
+        id: cpr
         uses: peter-evans/create-pull-request@v8
         with:
           commit-message: 'chore: update Untapped.gg Companion checksum'
@@ -68,8 +98,19 @@ jobs:
             Old checksum: `${{ steps.checksum.outputs.old_checksum }}`
             New checksum: `${{ steps.checksum.outputs.new_checksum }}`
 
+            The sha512 for ${{ env.MANIFEST }} has changed.
+
+            Old sha512: `${{ steps.preflight.outputs.old_sha512_base64 }}`
+            New sha512: `${{ steps.preflight.outputs.new_sha512_base64 }}`
+
             This PR was automatically created by the update-untappedgg-companion-checksum workflow.
           branch: update-untappedgg-companion-checksum
           base: master
           delete-branch: true
           reviewers: sabedevops
+
+      - name: Auto-merge PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.pr.outputs.pull-request-number }}
