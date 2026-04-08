@@ -35,17 +35,17 @@ jobs:
       - name: "Detect new release information from ${{ env.RELEASE_MANIFEST }}"
         id: preflight
         run: |
-          curl --silent --fail --output manifest.yaml ${{ env.RELEASE_MANIFEST }}
+          curl --silent --fail --output manifest.yaml "${{ env.RELEASE_MANIFEST }}"
           NEW_MANIFEST_SHA512="$(python -c 'import sys, yaml; print(yaml.safe_load(sys.stdin)["sha512"])' < manifest.yaml)"
           OLD_MANIFEST_SHA512="$(< "${{ env.MANIFEST }}")"
 
           if [ "$NEW_MANIFEST_SHA512" != "$OLD_MANIFEST_SHA512" ]; then
-            echo "new_sha512_base64=$NEW_MANIFEST_SHA512" >> $GITHUB_OUTPUT
-            echo "old_sha512_base64=$OLD_MANIFEST_SHA512" >> $GITHUB_OUTPUT
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "new_sha512_base64=$NEW_MANIFEST_SHA512" >> "$GITHUB_OUTPUT"
+            echo "old_sha512_base64=$OLD_MANIFEST_SHA512" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
             echo -e "SHA512 differs:\nOLD: $OLD_MANIFEST_SHA512\nNEW: $NEW_MANIFEST_SHA512"
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "SHA512 already matches. Nothing to do."
           fi
 
@@ -54,14 +54,15 @@ jobs:
         id: download
         run: |
           curl --output "${{ env.BINARY_FILE }}" "${{ env.BINARY_URL }}/${{ env.BINARY_FILE }}"
-          ACTUAL_SHA512_BASE64="$(sha512sum ${{ env.BINARY_FILE }} | awk '{print $1}' | xxd -r -p | base64)"
+          ACTUAL_SHA512_BASE64="$(sha512sum ${{ env.BINARY_FILE }} | awk '{print $1}' | xxd -r -p | base64 -w 0)"
 
           if [ "$ACTUAL_SHA512_BASE64" != "${{ steps.preflight.outputs.new_sha512_base64 }}" ]; then
-            echo "validated=false" >> "$GITHUB_OUTPUT
-            echo "Unknown error: SHA512 did not match. NEW: ${{ steps.preflight.outputs.new_sha512_base64 }}, ACTUAL: $ACTUAL_SHA512_BASE64"
+            echo "validated=false" >> "$GITHUB_OUTPUT"
+            echo "Unknown error: SHA512 did not match. NEW: ${{ steps.preflight.outputs.new_sha512_base64 }}, ACTUAL: $ACTUAL_SHA512_BASE64" >&2
             exit 1
-          else:
-            echo "validated=true" >> "$GITHUB_OUTPUT
+          else
+            echo "SHA512 matched; proceeding. NEW: ${{ steps.preflight.outputs.new_sha512_base64 }}, ACTUAL: $ACTUAL_SHA512_BASE64"
+            echo "validated=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Calculate installer sha256sum
@@ -72,12 +73,12 @@ jobs:
           OLD_CHECKSUM="$(grep "UNTAPPEDGG_COMPANION_CHECKSUM=" "${{ env.VERB_FILE }}" | cut -d '"' -f2)"
 
           if [ "$NEW_CHECKSUM" != "$OLD_CHECKSUM" ]; then
-            echo "new_checksum=$NEW_CHECKSUM" >> $GITHUB_OUTPUT
-            echo "old_checksum=$OLD_CHECKSUM" >> $GITHUB_OUTPUT
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "new_checksum=$NEW_CHECKSUM" >> "$GITHUB_OUTPUT"
+            echo "old_checksum=$OLD_CHECKSUM" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
             echo -e "Checksums differ:\nOLD: $OLD_CHECKSUM\nNEW: $NEW_CHECKSUM"
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Checksums already match. Nothing to do."
           fi
 
@@ -119,4 +120,4 @@ jobs:
         if: steps.cpr.outputs.pull-request-number != ''
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          pull-request-number: ${{ steps.pr.outputs.pull-request-number }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
