@@ -1,7 +1,8 @@
+# yamllint disable rule:line-length
 ---
 name: update-untappedgg-companion-checksum
 
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -9,14 +10,14 @@ on:
 jobs:
   update-untappedgg-companion-checksum:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: write
       pull-requests: write
 
     env:
       RELEASE_MANIFEST: "https://companion.untapped.gg/releases/latest.yml"
-      MANIFEST:  "manifest.sha512-base64"
+      MANIFEST: "manifest.sha512-base64"
       BINARY_FILE: "Untapped.gg+Companion+Stable+Installer.exe"
       BINARY_URL: "https://companion.untapped.gg/releases"
       VERB_FILE: "untappedgg_companion.verb"
@@ -53,7 +54,7 @@ jobs:
         id: download
         run: |
           curl --output "${{ env.BINARY_FILE }}" "${{ env.BINARY_URL }}/${{ env.BINARY_FILE }}"
-          ACTUAL_SHA512_BASE64="$(sha512sum ${{ env.BINARY_FILE }} | awk '{print $1}' | xxd -r -p | base64)
+          ACTUAL_SHA512_BASE64="$(sha512sum ${{ env.BINARY_FILE }} | awk '{print $1}' | xxd -r -p | base64)"
 
           if [ "$ACTUAL_SHA512_BASE64" != "${{ steps.preflight.outputs.new_sha512_base64 }}" ]; then
             echo "validated=false" >> "$GITHUB_OUTPUT
