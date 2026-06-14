@@ -74,6 +74,34 @@ flatpak run \
 
 NOTE: After performing login for the first time, you may need to restart the game for the Untapped.gg Companion to work correctly.
 
+Alternative: Native protontricks (non-flatpak)
+==============================================
+
+If you have `protontricks` from your distro's package manager (e.g.
+`pacman -S protontricks` on Arch, `dnf install protontricks` on
+Fedora) instead of the flatpak, the install steps above need two
+adjustments:
+
+* Replace `flatpak run --env=PROTON_VERSION='Proton Experimental' com.github.Matoking.protontricks` with just `protontricks`.
+* Pass `--no-bwrap` for the verb install. Native protontricks sandboxes its wine call with bubblewrap by default, which prevents wine from reading Steam's compatdata prefix.
+
+So step 3 (verb install) becomes:
+
+```bash
+cd wine_untappedgg_companion
+protontricks "${STEAM_APPID}" --no-bwrap -q untappedgg_companion.verb
+```
+
+And step 5 (assemble the launch option) takes a `PROTONTRICKS_NATIVE=1` env var:
+
+```bash
+PROTONTRICKS_NATIVE=1 ./assemble_proton_cmd.sh "${STEAM_APPID}"
+```
+
+The path it prints will be under `~/.local/share/Steam/...` (not the
+flatpak's `~/.var/app/com.valvesoftware.Steam/...`), since native
+protontricks talks to the regular Steam install.
+
 Additional Information:
 =======================
 
