@@ -105,7 +105,13 @@ protontricks talks to the regular Steam install.
 Additional Information:
 =======================
 
-NOTE: At this time, the overlay UI causes significant weirdness. We disable the overlay, and instead use pop-out windows were possible to workaround the issue.
+NOTE: On Wine/XWayland the Untapped.gg Companion overlay can render solid-black because Electron's GPU-accelerated compositor doesn't produce alpha-correct output that Wine can hand to the X server with alpha intact. Appending `--disable-gpu --disable-gpu-compositing` to the launch command falls back to Chromium's CPU compositor, which fixes overlay transparency. Confirmed working on Hyprland (Arch / Omarchy) with Proton Experimental:
+
+```
+PROTON_REMOTE_DEBUG_CMD="<...>/Untapped.gg\ Companion.exe --disable-gpu --disable-gpu-compositing" %command%
+```
+
+If the overlay still doesn't work for you (or you'd rather not pay the CPU-compositor cost), you can disable the overlay in the companion settings and use pop-out (Player Deck / Opponent Deck) windows instead — those are regular floating windows and don't need the flags.
 
 For more information, see here:
 
