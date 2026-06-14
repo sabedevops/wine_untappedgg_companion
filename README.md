@@ -89,7 +89,7 @@ So step 3 (verb install) becomes:
 
 ```bash
 cd wine_untappedgg_companion
-protontricks "${STEAM_APPID}" --no-bwrap -q untappedgg_companion.verb
+protontricks --no-bwrap "${STEAM_APPID}" -q untappedgg_companion.verb
 ```
 
 And step 5 (assemble the launch option) takes a `PROTONTRICKS_NATIVE=1` env var:
