@@ -113,6 +113,8 @@ PROTON_REMOTE_DEBUG_CMD="<...>/Untapped.gg\ Companion.exe --disable-gpu --disabl
 
 If the overlay still doesn't work for you (or you'd rather not pay the CPU-compositor cost), you can disable the overlay in the companion settings and use pop-out (Player Deck / Opponent Deck) windows instead — those are regular floating windows and don't need the flags.
 
+Hyprland users: see [`examples/hyprland-windows.conf`](./examples/hyprland-windows.conf) for starter window rules.
+
 For more information, see here:
 
 * [Known Overlay Issues](https://github.com/sabedevops/wine_untappedgg_companion/wiki/Known-Overlay-Issues)
