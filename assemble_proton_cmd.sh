@@ -7,18 +7,19 @@ fi
 
 STEAM_APPID="${1}"
 
-# Set PROTONTRICKS_NATIVE=1 if protontricks is installed via your distro
-# package manager rather than the flatpak (e.g. `pacman -S protontricks`
-# on Arch, `dnf install protontricks` on Fedora). Native protontricks
-# sandboxes its wine call with bubblewrap by default, which prevents it
-# from reading Steam's compatdata prefix, so --no-bwrap is required.
 protontricks_wrap() {
-    if [ "${PROTONTRICKS_NATIVE:-0}" = "1" ]; then
+    if command -v protontricks > /dev/null 2>&1; then
+        # Native protontricks sandboxes its wine call with bubblewrap by default,
+        # which prevents it from reading Steam's compatdata prefix,
+        # so --no-bwrap is required.
         protontricks --no-bwrap "$@"
-    else
+    elif command -v flatpak info com.github.Matoking.protontricks > /dev/null 2>&1; then
         flatpak run \
             --env=PROTON_VERSION="Proton Experimental" \
             com.github.Matoking.protontricks "$@"
+    else
+        echo "protontrics not found in PATH or flatpak installation" >&2
+        exit 1
     fi
 }
 
