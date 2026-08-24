@@ -74,10 +74,46 @@ flatpak run \
 
 NOTE: After performing login for the first time, you may need to restart the game for the Untapped.gg Companion to work correctly.
 
+Alternative: Native protontricks (non-flatpak)
+==============================================
+
+If you have `protontricks` from your distro's package manager (e.g.
+`pacman -S protontricks` on Arch, `dnf install protontricks` on
+Fedora) instead of the flatpak, the install steps above need two
+adjustments:
+
+* Replace `flatpak run --env=PROTON_VERSION='Proton Experimental' com.github.Matoking.protontricks` with just `protontricks`.
+* Pass `--no-bwrap` for the verb install. Native protontricks sandboxes its wine call with bubblewrap by default, which prevents wine from reading Steam's compatdata prefix.
+
+So step 3 (verb install) becomes:
+
+```bash
+cd wine_untappedgg_companion
+protontricks --no-bwrap "${STEAM_APPID}" -q untappedgg_companion.verb
+```
+
+And step 5 (assemble the launch option) takes a `PROTONTRICKS_NATIVE=1` env var:
+
+```bash
+PROTONTRICKS_NATIVE=1 ./assemble_proton_cmd.sh "${STEAM_APPID}"
+```
+
+The path it prints will be under `~/.local/share/Steam/...` (not the
+flatpak's `~/.var/app/com.valvesoftware.Steam/...`), since native
+protontricks talks to the regular Steam install.
+
 Additional Information:
 =======================
 
-NOTE: At this time, the overlay UI causes significant weirdness. We disable the overlay, and instead use pop-out windows were possible to workaround the issue.
+NOTE: On Wine/XWayland the Untapped.gg Companion overlay can render solid-black because Electron's GPU-accelerated compositor doesn't produce alpha-correct output that Wine can hand to the X server with alpha intact. Appending `--disable-gpu --disable-gpu-compositing` to the launch command falls back to Chromium's CPU compositor, which fixes overlay transparency. Confirmed working on Hyprland (Arch / Omarchy) with Proton Experimental:
+
+```
+PROTON_REMOTE_DEBUG_CMD="<...>/Untapped.gg\ Companion.exe --disable-gpu --disable-gpu-compositing" %command%
+```
+
+If the overlay still doesn't work for you (or you'd rather not pay the CPU-compositor cost), you can disable the overlay in the companion settings and use pop-out (Player Deck / Opponent Deck) windows instead — those are regular floating windows and don't need the flags.
+
+Hyprland users: see [`examples/hyprland-windows.conf`](./examples/hyprland-windows.conf) for starter window rules.
 
 For more information, see here:
 
