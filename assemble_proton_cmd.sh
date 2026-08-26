@@ -13,12 +13,12 @@ protontricks_wrap() {
         # which prevents it from reading Steam's compatdata prefix,
         # so --no-bwrap is required.
         protontricks --no-bwrap "$@"
-    elif command -v flatpak info com.github.Matoking.protontricks > /dev/null 2>&1; then
+    elif flatpak info com.github.Matoking.protontricks > /dev/null 2>&1; then
         flatpak run \
             --env=PROTON_VERSION="Proton Experimental" \
             com.github.Matoking.protontricks "$@"
     else
-        echo "protontrics not found in PATH or flatpak installation" >&2
+        echo "protontricks not found in PATH or flatpak installation" >&2
         exit 1
     fi
 }
