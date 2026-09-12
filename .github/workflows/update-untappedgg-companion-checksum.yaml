@@ -115,9 +115,10 @@ jobs:
           base: master
           delete-branch: true
           reviewers: sabedevops
+          sign-commits: true
 
-#      - name: Auto-merge PR
-#        if: steps.cpr.outputs.pull-request-number != ''
-#        uses: peter-evans/enable-pull-request-automerge@v3
-#        with:
-#          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+      - name: Auto-merge PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
