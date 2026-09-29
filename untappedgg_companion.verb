@@ -48,7 +48,7 @@ w_metadata untappedgg_companion apps \
     file1='Untapped.gg+Companion+Stable+Installer.exe' \
     installed_exe1="${W_LOCALAPPDATA_WIN}\\Programs\\untapped-companion\\Untapped.gg Companion.exe"
 
-UNTAPPEDGG_COMPANION_CHECKSUM="940ae928b931f29f6b091dc0200e7e7388acbdbf085d0915d362c4be60dc16b5"
+UNTAPPEDGG_COMPANION_CHECKSUM="48e96996da82d3ba80a4fda993d12e7599ae3b05583b99c033377e7a9c1f1633"
 
 load_untappedgg_companion() {
     w_download "https://companion.untapped.gg/releases/${file1}" "${UNTAPPEDGG_COMPANION_CHECKSUM}"
